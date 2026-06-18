@@ -1,0 +1,48 @@
+{
+  "name": "three-electron-previewer",
+  "version": "1.0.0",
+  "description": "A 3D Model Previewer application built with Electron, Vite, and Three.js",
+  "author": "Your Name <your.email@example.com>",
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "start": "electron .",
+    "build": "vite build && electron-builder --win --dir"
+  },
+  "dependencies": {
+    "three": "^0.184.0"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3",
+    "vite": "^5.0.0",
+    "vite-plugin-electron": "^0.28.0"
+  },
+  "build": {
+    "appId": "com.yourdomain.threepreview",
+    "productName": "3D Model Previewer",
+    "files": [
+      "dist/**/*",
+      "assets/**/*",
+      "main.js",
+      "preload.js",
+      "package.json"
+    ],
+    "asar": false,
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "icon": "assets/Logo.ico",
+      "target": ["nsis"], 
+      "signAndEditExecutable": true
+    },
+    "nsis": {
+      "oneClick": true,
+      "allowToChangeInstallationDirectory": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}

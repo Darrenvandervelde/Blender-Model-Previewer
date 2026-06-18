@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Model Previewer</title>
+    <style>
+        /* Make the canvas fill the entire screen seamlessly */
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #232323;
+            font-family: sans-serif;
+        }
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+        }
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 20px;
+            pointer-events: none;
+            display: none; /* Hidden by default, shown during loads */
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px 25px;
+            border-radius: 8px;
+        }
+        /* Custom UI for selecting files */
+        #ui-container {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+            background: rgba(40, 40, 40, 0.85);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            border: 1px solid #444;
+        }
+        #ui-container label {
+            display: inline-block;
+            background: #2563eb;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        #ui-container label:hover {
+            background: #1d4ed8;
+        }
+        #file-input {
+            display: none;
+        }
+        #model-info {
+            color: #aaa;
+            font-size: 12px;
+            margin-top: 8px;
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
+</head>
+<body>
+    
+    <div id="ui-container">
+        <label for="file-input">Choose 3D Model (.gltf, .glb)</label>
+        <input type="file" id="file-input" accept=".gltf,.glb">
+        <div id="model-info">No model loaded. Please select one.</div>
+    </div>
+
+    <div id="loading">Loading Blender Model...</div>
+    <div id="canvas-container"></div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+// 1. Setup Scene, Camera, and Renderer
+const container = document.getElementById('canvas-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x232323);
+
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(0, 3, 6);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.shadowMap.enabled = true;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+container.appendChild(renderer.domElement);
+
+// 2. Setup Controls
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = false;
+
+// 3. Setup Lighting
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+scene.add(ambientLight);
+
+const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
+dirLight.position.set(5, 10, 7);
+dirLight.castShadow = true;
+scene.add(dirLight);
+
+// 4. UI References
+const fileInput = document.getElementById('file-input');
+const loadingDiv = document.getElementById('loading');
+const btnShaded = document.getElementById('btn-shaded');
+const btnWireframe = document.getElementById('btn-wireframe');
+const lightRange = document.getElementById('light-intensity');
+const lightVal = document.getElementById('light-val');
+const autoRotateToggle = document.getElementById('auto-rotate');
+
+// Diagnostics
+const metaName = document.getElementById('meta-name');
+const metaPolys = document.getElementById('meta-polys');
+const metaVerts = document.getElementById('meta-verts');
+const metaStatus = document.getElementById('meta-status');
+
+let currentModel = null;
+
+// 5. Logic Handlers
+fileInput.addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    metaName.innerText = file.name;
+    metaStatus.innerText = "LOADING...";
+    loadingDiv.style.display = 'flex';
+
+    if (currentModel) scene.remove(currentModel);
+
+    const loader = new GLTFLoader();
+    loader.load(URL.createObjectURL(file), (gltf) => {
+        currentModel = gltf.scene;
+        let polygons = 0;
+        let vertices = 0;
+
+        currentModel.traverse((child) => {
+            if (child.isMesh) {
+                child.castShadow = true;
+                const geometry = child.geometry;
+                vertices += geometry.attributes.position.count;
+                polygons += geometry.index ? geometry.index.count / 3 : geometry.attributes.position.count / 3;
+            }
+        });
+
+        metaPolys.innerText = Math.round(polygons).toLocaleString();
+        metaVerts.innerText = vertices.toLocaleString();
+        metaStatus.innerText = "READY";
+        
+        scene.add(currentModel);
+        loadingDiv.style.display = 'none';
+    });
+});
+
+// Shading Toggle
+btnShaded.addEventListener('click', () => {
+    btnShaded.classList.add('active');
+    btnWireframe.classList.remove('active');
+    currentModel?.traverse(c => { if(c.isMesh) c.material.wireframe = false; });
+});
+
+btnWireframe.addEventListener('click', () => {
+    btnWireframe.classList.add('active');
+    btnShaded.classList.remove('active');
+    currentModel?.traverse(c => { if(c.isMesh) c.material.wireframe = true; });
+});
+
+// Lighting Intensity
+lightRange.addEventListener('input', (e) => {
+    const val = parseFloat(e.target.value);
+    dirLight.intensity = val;
+    lightVal.innerText = `${val.toFixed(1)}x`;
+});
+
+// 6. Animation Loop
+function animate() {
+    requestAnimationFrame(animate);
+    controls.autoRotate = autoRotateToggle.checked;
+    controls.update();
+    renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+    </script>
+</body>
+</html>
