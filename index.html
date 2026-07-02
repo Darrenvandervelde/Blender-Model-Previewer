@@ -1,500 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Model Previewer</title>
-    <style>
-        /* --- Core Styling & Futuristic Typography --- */
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
-
-body {
-    margin: 0;
-    overflow: hidden;
-    background-color: #05070b;
-    font-family: 'Share Tech Mono', monospace;
-    color: #00f0ff;
-    background-image: 
-        linear-gradient(rgba(0, 240, 255, 0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 240, 255, 0.02) 1px, transparent 1px);
-    background-size: 30px 30px;
-}
-
-#canvas-container {
-    width: 100vw;
-    height: 100vh;
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 1;
-}
-
-/* --- Screen Corner Brackets --- */
-.screen-bracket {
-    position: fixed;
-    width: 40px;
-    height: 40px;
-    z-index: 5;
-    pointer-events: none;
-    border: 3px solid rgba(0, 240, 255, 0.4);
-    box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
-}
-
-.bracket-tl { top: 20px; left: 20px; border-right: none; border-bottom: none; }
-.bracket-tr { top: 20px; right: 20px; border-left: none; border-bottom: none; }
-.bracket-bl { bottom: 20px; left: 20px; border-right: none; border-top: none; }
-.bracket-br { bottom: 20px; right: 20px; border-left: none; border-top: none; }
-
-/* --- Premium Left Sidebar UI --- */
-#ui-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 320px;
-    height: 100vh;
-    z-index: 10;
-    background: linear-gradient(135deg, rgba(6, 11, 19, 0.95) 0%, rgba(4, 7, 12, 0.85) 100%);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    box-sizing: border-box;
-    padding: 35px 25px;
-    border-right: 2px solid #00f0ff;
-    box-shadow: 10px 0 30px rgba(0, 240, 255, 0.15);
-    display: flex;
-    flex-direction: column;
-    gap: 25px;
-}
-
-/* Sidebar Elements */
-.sidebar-header { display: flex; justify-content: space-between; align-items: center; }
-#ui-container h2 { font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 20px; margin: 0; letter-spacing: 2px; text-shadow: 0 0 10px rgba(0, 240, 255, 0.6); }
-
-.status-indicator { display: flex; align-items: center; gap: 8px; background: rgba(0, 240, 255, 0.1); padding: 4px 10px; border-radius: 3px; border: 1px solid rgba(0, 240, 255, 0.3); }
-.pulse-dot { width: 8px; height: 8px; background-color: #00f0ff; border-radius: 50%; box-shadow: 0 0 8px #00f0ff; animation: pulse 1.5s infinite; }
-.status-text { font-size: 11px; font-weight: bold; letter-spacing: 1px; }
-
-.neon-divider { height: 2px; background: linear-gradient(90deg, #00f0ff, transparent); position: relative; overflow: hidden; margin: 5px 0; }
-.neon-divider::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent); animation: scan-line 2.5s infinite linear; }
-
-.control-group { display: flex; flex-direction: column; gap: 10px; }
-.group-label { font-size: 11px; color: rgba(0, 240, 255, 0.6); letter-spacing: 1.5px; font-weight: bold; }
-.control-row { display: flex; gap: 10px; }
-
-/* Buttons & Inputs */
-.cyber-button { display: block; position: relative; background: transparent; color: #00f0ff; border: 1px solid #00f0ff; padding: 15px 20px; font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-align: center; cursor: pointer; text-transform: uppercase; transition: all 0.2s ease; clip-path: polygon(0% 0%, 92% 0%, 100% 30%, 100% 100%, 8% 100%, 0% 70%); box-shadow: inset 0 0 10px rgba(0, 240, 255, 0.1); }
-.cyber-button:hover { background: #00f0ff; color: #05070b; box-shadow: 0 0 20px rgba(0, 240, 255, 0.6); }
-#file-input { display: none; }
-
-.cyber-btn-sm { flex: 1; background: rgba(0, 240, 255, 0.05); border: 1px solid rgba(0, 240, 255, 0.4); color: #00f0ff; padding: 10px; font-family: 'Share Tech Mono', monospace; font-size: 12px; font-weight: bold; letter-spacing: 1px; cursor: pointer; transition: all 0.2s ease; }
-.cyber-btn-sm:hover, .cyber-btn-sm.active { background: rgba(0, 240, 255, 0.2); border-color: #00f0ff; box-shadow: 0 0 12px rgba(0, 240, 255, 0.3); }
-
-input[type="range"] { -webkit-appearance: none; appearance: none; flex: 1; background: rgba(0, 240, 255, 0.1); height: 6px; border: 1px solid rgba(0, 240, 255, 0.3); border-radius: 3px; outline: none; }
-input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 14px; height: 14px; background: #00f0ff; box-shadow: 0 0 8px #00f0ff; border-radius: 50%; cursor: pointer; transition: transform 0.1s ease; }
-.matrix-readout { font-size: 14px; min-width: 40px; text-align: right; font-weight: bold; }
-
-/* Toggle Switch */
-.cyber-switch { display: flex; align-items: center; cursor: pointer; gap: 12px; font-size: 13px; user-select: none; }
-.cyber-switch input { display: none; }
-.cyber-switch .slider { width: 36px; height: 18px; background-color: rgba(255, 255, 255, 0.05); border: 1px solid rgba(0, 240, 255, 0.4); position: relative; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 10px; }
-.cyber-switch .slider:before { content: ""; position: absolute; height: 12px; width: 12px; left: 2px; bottom: 2px; background-color: rgba(0, 240, 255, 0.5); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 50%; }
-.cyber-switch input:checked + .slider { background-color: rgba(0, 240, 255, 0.15); border-color: #00f0ff; box-shadow: 0 0 10px rgba(0, 240, 255, 0.3); }
-.cyber-switch input:checked + .slider:before { transform: translateX(18px); background-color: #00f0ff; box-shadow: 0 0 5px #00f0ff; }
-
-/* Diagnostic Box */
-#model-info { display: flex; flex-direction: column; gap: 8px; background: rgba(0, 15, 25, 0.6); border: 1px solid rgba(0, 240, 255, 0.3); padding: 15px; border-radius: 4px; font-size: 13px; box-shadow: inset 0 0 15px rgba(0, 240, 255, 0.05); }
-.info-row { display: flex; justify-content: space-between; align-items: center; }
-.info-row .lbl { color: rgba(0, 240, 255, 0.5); }
-.info-row .val { color: #fff; text-shadow: 0 0 5px rgba(0, 240, 255, 0.4); }
-
-.sidebar-footer { margin-top: auto; font-size: 11px; color: rgba(0, 240, 255, 0.4); display: flex; align-items: center; justify-content: space-between; letter-spacing: 1px; }
-.corner-bracket { width: 15px; height: 15px; border-left: 3px solid rgba(0, 240, 255, 0.5); border-bottom: 3px solid rgba(0, 240, 255, 0.5); }
-
-/* --- Overlays & Animations --- */
-#loading { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 100; background: rgba(4, 7, 12, 0.95); display: none; flex-direction: column; justify-content: center; align-items: center; gap: 20px; }
-.spinner { width: 50px; height: 50px; border: 3px solid rgba(0, 240, 255, 0.1); border-radius: 50%; border-top-color: #00f0ff; animation: spin 1s infinite linear; box-shadow: 0 0 15px rgba(0, 240, 255, 0.2); }
-.loading-text { font-family: 'Orbitron', sans-serif; color: #00f0ff; font-size: 16px; letter-spacing: 4px; text-shadow: 0 0 10px rgba(0, 240, 255, 0.5); }
-
-@keyframes pulse { 0%, 100% { opacity: 0.4; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1.1); box-shadow: 0 0 12px #00f0ff; } }
-@keyframes scan-line { 0% { left: -100%; } 100% { left: 200%; } }
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blender Model Previewer</title>
+  <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-
-    <div id="ui-container">
-        <input type="file" id="file-input" accept=".gltf,.glb" style="display:none">
-        <label for="file-input" style="background:#2563eb; padding:8px; cursor:pointer">Load Model</label>
-        <br><br>
-        <button id="btn-grid">Toggle Grid</button>
-        <button id="btn-measure">Measure Tool</button>
-        <div id="model-info">Load a model to begin.</div>
-    </div>
-    
-    <div id="measurement-label"></div>
-    <div id="canvas-container"></div>
-
-    <script type="importmap">
-        { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
-    </script>
-
-    <script type="module">
-import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-
-// ======================
-// Scene Setup
-// ======================
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x232323);
-
-const camera = new THREE.PerspectiveCamera(
-    45,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    1000
-);
-
-camera.position.set(0, 3, 6);
-
-const renderer = new THREE.WebGLRenderer({
-    antialias: true
-});
-
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.localClippingEnabled = true;
-
-document
-    .getElementById('canvas-container')
-    .appendChild(renderer.domElement);
-
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
-
-// ======================
-// Lighting
-// ======================
-scene.add(new THREE.AmbientLight(0xffffff, 0.8));
-
-const dirLight = new THREE.DirectionalLight(0xffffff, 1);
-dirLight.position.set(5, 10, 7);
-scene.add(dirLight);
-
-// ======================
-// Grid
-// ======================
-const gridHelper = new THREE.GridHelper(
-    10,
-    10,
-    0x00ff00,
-    0x222222
-);
-
-gridHelper.visible = false;
-scene.add(gridHelper);
-
-// Toggle Grid
-const gridToggle = document.getElementById('toggle-grid');
-if (gridToggle) {
-    gridToggle.addEventListener('change', (e) => {
-        gridHelper.visible = e.target.checked;
-    });
-}
-
-// ======================
-// Variables
-// ======================
-const loader = new GLTFLoader();
-const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
-
-let model = null;
-let boxHelper = null;
-
-let measureMode = false;
-let measurementPoints = [];
-let measurementLine = null;
-
-// ======================
-// Measure Tool
-// ======================
-const measureToggle = document.getElementById('toggle-measure');
-
-if (measureToggle) {
-    measureToggle.addEventListener('change', (e) => {
-        measureMode = e.target.checked;
-
-        measurementPoints = [];
-
-        if (measurementLine) {
-            scene.remove(measurementLine);
-            measurementLine = null;
-        }
-    });
-}
-
-window.addEventListener('click', (event) => {
-
-    if (!measureMode || !model) return;
-
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-    raycaster.setFromCamera(mouse, camera);
-
-    const intersects = raycaster.intersectObject(model, true);
-
-    if (intersects.length === 0) return;
-
-    measurementPoints.push(intersects[0].point);
-
-    if (measurementPoints.length > 2) {
-        measurementPoints.shift();
-    }
-
-    if (measurementPoints.length === 2) {
-
-        if (measurementLine) {
-            scene.remove(measurementLine);
-        }
-
-        const geometry =
-            new THREE.BufferGeometry().setFromPoints(
-                measurementPoints
-            );
-
-        measurementLine = new THREE.Line(
-            geometry,
-            new THREE.LineBasicMaterial({
-                color: 0xff0000
-            })
-        );
-
-        scene.add(measurementLine);
-
-        const distance =
-            measurementPoints[0].distanceTo(
-                measurementPoints[1]
-            );
-
-        document.getElementById(
-            'measurement-label'
-        ).innerText =
-            `Distance: ${distance.toFixed(2)} units`;
-
-        console.log(
-            `Distance: ${distance.toFixed(2)} units`
-        );
-    }
-});
-
-// ======================
-// Clipping Plane
-// ======================
-const clippingPlane = new THREE.Plane(
-    new THREE.Vector3(-1, 0, 0),
-    0
-);
-
-// ======================
-// Load GLB / GLTF
-// ======================
-document
-    .getElementById('file-input')
-    .addEventListener('change', (e) => {
-
-        const file = e.target.files[0];
-
-        if (!file) return;
-
-        const url = URL.createObjectURL(file);
-
-        loader.load(url, (gltf) => {
-
-            // Remove old model
-            if (model) {
-                scene.remove(model);
-            }
-
-            if (boxHelper) {
-                scene.remove(boxHelper);
-            }
-
-            model = gltf.scene;
-            scene.add(model);
-
-            // Apply clipping plane
-            model.traverse((child) => {
-
-                if (child.isMesh) {
-
-                    child.material.clippingPlanes = [
-                        clippingPlane
-                    ];
-
-                    child.material.clipShadows = true;
-                }
-            });
-
-            // Bounding Box
-            boxHelper = new THREE.BoxHelper(
-                model,
-                0xffff00
-            );
-
-            scene.add(boxHelper);
-
-            // Auto frame model
-            const box = new THREE.Box3()
-                .setFromObject(model);
-
-            const center = box.getCenter(
-                new THREE.Vector3()
-            );
-
-            const size = box.getSize(
-                new THREE.Vector3()
-            );
-
-            const maxDim = Math.max(
-                size.x,
-                size.y,
-                size.z
-            );
-
-            camera.position.set(
-                maxDim,
-                maxDim,
-                maxDim
-            );
-
-            controls.target.copy(center);
-            controls.update();
-
-            document.getElementById(
-                'model-info'
-            ).innerText =
-                `Model Loaded`;
-        });
-    });
-
-// ======================
-// Camera Views
-// ======================
-function setCameraView(view) {
-
-    if (!model) return;
-
-    const box = new THREE.Box3()
-        .setFromObject(model);
-
-    const center = box.getCenter(
-        new THREE.Vector3()
-    );
-
-    const size = box.getSize(
-        new THREE.Vector3()
-    );
-
-    const distance =
-        Math.max(size.x, size.y, size.z) * 2;
-
-    switch (view) {
-
-        case 'front':
-            camera.position.set(
-                center.x,
-                center.y,
-                center.z + distance
-            );
-            break;
-
-        case 'top':
-            camera.position.set(
-                center.x,
-                center.y + distance,
-                center.z
-            );
-            break;
-
-        case 'left':
-            camera.position.set(
-                center.x - distance,
-                center.y,
-                center.z
-            );
-            break;
-
-        case 'right':
-            camera.position.set(
-                center.x + distance,
-                center.y,
-                center.z
-            );
-            break;
-
-        case 'iso':
-            camera.position.set(
-                center.x + distance,
-                center.y + distance,
-                center.z + distance
-            );
-            break;
-    }
-
-    controls.target.copy(center);
-    controls.update();
-}
-
-// Example buttons
-document.getElementById('front-view')?.addEventListener(
-    'click',
-    () => setCameraView('front')
-);
-
-document.getElementById('top-view')?.addEventListener(
-    'click',
-    () => setCameraView('top')
-);
-
-document.getElementById('iso-view')?.addEventListener(
-    'click',
-    () => setCameraView('iso')
-);
-
-// ======================
-// Resize
-// ======================
-window.addEventListener('resize', () => {
-
-    camera.aspect =
-        window.innerWidth / window.innerHeight;
-
-    camera.updateProjectionMatrix();
-
-    renderer.setSize(
-        window.innerWidth,
-        window.innerHeight
-    );
-});
-
-// ======================
-// Animation Loop
-// ======================
-function animate() {
-
-    requestAnimationFrame(animate);
-
-    controls.update();
-
-    if (boxHelper && model) {
-        boxHelper.update();
-    }
-
-    renderer.render(scene, camera);
-}
-
-animate();
-    </script>
+  <div class="container">
+    <header class="header">
+      <div class="title-container">
+        <h2 class="title-top">3D CORE v1.0 <span class="online-indicator"></span> ONLINE</h2>
+        <h1 class="title-main">BLENDER MODEL</h1>
+        <h1 class="title-previewer">PREVIEWER</h1>
+        <p class="subtitle">FAST • LIGHTWEIGHT • POWERFUL</p>
+      </div>
+    </header>
+
+    <aside class="sidebar">
+      <div class="sidebar-content">
+        <div class="control-group">
+          <label>GEOMETRY INPUT</label>
+          <button id="load-button" class="control-button">LOAD .GLTF / .GLB</button>
+        </div>
+        <div class="control-group">
+          <label>RENDERING ENGINE</label>
+          <div class="button-group">
+            <button id="shaded-btn" class="control-button active">SHADED</button>
+            <button id="wireframe-btn" class="control-button">WIREFRAME</button>
+          </div>
+        </div>
+        <div class="control-group">
+          <label>LIGHTING INTENSITY</label>
+          <div class="slider-container">
+            <input type="range" min="0" max="3" value="1" step="0.1" class="slider" id="light-slider">
+            <span id="light-value">1.0x</span>
+          </div>
+        </div>
+        <div class="control-group">
+          <label>ORBITAL MATRIX</label>
+          <div class="switch-container">
+            <label class="switch">
+              <input type="checkbox" id="auto-rotate-switch" checked>
+              <span class="switch-slider"></span>
+            </label>
+            <span>AUTO-ROTATION</span>
+          </div>
+        </div>
+        <div class="control-group diagnostics">
+          <label>SYSTEM DIAGNOSTICS</label>
+          <p>SYS: <span id="sys-status">READY</span></p>
+          <p>FILE: <span id="file-name">Monkey.glb</span></p>
+          <p>POLYS: <span id="poly-count">968</span></p>
+          <p>VERTS: <span id="vert-count">1,966</span></p>
+        </div>
+      </div>
+      <div class="secure-connection">
+        <p>SECURE CONNECTION // 0x77A</p>
+      </div>
+    </aside>
+
+    <main id="main-content" class="main-content"></main>
+
+    <footer class="footer">
+      <div class="feature"><div class="icon-placeholder"></div><h3>MODEL PREVIEW</h3><p>Instant 3D model visualization</p></div>
+      <div class="feature"><div class="icon-placeholder"></div><h3>REALTIME RENDERING</h3><p>Optimized performance with modern engine</p></div>
+      <div class="feature"><div class="icon-placeholder"></div><h3>AUTO ROTATION</h3><p>Interactive model exploration</p></div>
+      <div class="feature"><div class="icon-placeholder"></div><h3>SECURE & RELIABLE</h3><p>Safe connection & trusted platform</p></div>
+    </footer>
+  </div>
+
+  <script type="module" src="/index.js"></script>
 </body>
+
 </html>
