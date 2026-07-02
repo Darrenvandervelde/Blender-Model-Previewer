@@ -430,21 +430,6 @@ function animate() {
 
     renderer.render(scene, camera);
 
-    // Update measurement sprite scales
-    for (const obj of measureObjects) {
-        if (obj instanceof THREE.Sprite) {
-            // Calculate scale based on distance to maintain consistent screen size
-            const distance = camera.position.distanceTo(obj.position);
-            // Adjust this constant to fine-tune the desired screen size of the label
-            const scaleFactor = distance * 0.1; 
-            obj.scale.set(
-                scaleFactor * (256 / 64), // Maintain aspect ratio based on canvas dimensions
-                scaleFactor,
-                1
-            );
-        }
-    }
-
 }
 
 animate();
