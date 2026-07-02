@@ -4,11 +4,11 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 // --- DOM ELEMENTS ---
 const mainContent = document.getElementById('main-content');
-const lightSlider = document.getElementById('light-slider');
-const lightValue = document.getElementById('light-value');
-const autoRotateSwitch = document.getElementById('auto-rotate-switch');
-const shadedBtn = document.getElementById('shaded-btn');
-const wireframeBtn = document.getElementById('wireframe-btn');
+const lightSlider = document.getElementById('light-intensity');
+const lightValue = document.getElementById('light-val');
+const autoRotateSwitch = document.getElementById('auto-rotate');
+const shadedBtn = document.getElementById('btn-shaded');
+const wireframeBtn = document.getElementById('btn-wireframe');
 
 // Scene setup
 const scene = new THREE.Scene();
