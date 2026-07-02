@@ -148,3 +148,79 @@ shadedBtn.addEventListener('click', () => {
   shadedBtn.classList.add('active');
   wireframeBtn.classList.remove('active');
 });
+
+const gridHelper = new THREE.GridHelper(10, 10, 0x00ff00, 0x222222);
+gridHelper.visible = false; // Hidden by default
+scene.add(gridHelper);
+
+// Event Listener for the UI switch
+document.getElementById('toggle-grid').addEventListener('change', (e) => {
+    gridHelper.visible = e.target.checked;
+});
+
+let measureMode = false;
+let points = [];
+
+// Event Listener for UI switch
+document.getElementById('toggle-measure').addEventListener('change', (e) => {
+    measureMode = e.target.checked;
+    points = []; // Reset on toggle
+});
+
+// Click handler (Add this to your existing canvas click listener)
+window.addEventListener('click', (event) => {
+    if (!measureMode) return;
+
+    const raycaster = new THREE.Raycaster();
+    // Normalize mouse coordinates...
+    // raycaster.setFromCamera(mouse, camera);
+    
+    const intersects = raycaster.intersectObject(currentModel, true);
+    
+    if (intersects.length > 0) {
+        points.push(intersects[0].point);
+        
+        if (points.length === 2) {
+            const distance = points[0].distanceTo(points[1]);
+            console.log(`Distance: ${distance.toFixed(2)} units`);
+            // Add a LineBasicMaterial/BufferGeometry to draw the line between points[0] and points[1]
+            points = []; // Reset after measurement
+        }
+    }
+});
+
+// Add to your renderer
+renderer.localClippingEnabled = true;
+
+// Create a plane
+const plane = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0);
+// Apply to model material
+if (currentModel) {
+    currentModel.traverse(child => {
+        if (child.isMesh) {
+            child.material.clippingPlanes = [plane];
+            child.material.clipShadows = true;
+        }
+    });
+}
+
+
+const box = new THREE.BoxHelper(currentModel, 0xffff00);
+scene.add(box);
+
+// Update this in your animation loop to track model movement
+if (currentModel) {
+    box.setFromObject(currentModel);
+}
+
+
+function setCameraView(axis) {
+    const positions = {
+        'front': { x: 0, y: 0, z: 5 },
+        'top': { x: 0, y: 5, z: 0 },
+        'iso': { x: 5, y: 5, z: 5 }
+    };
+    // Use GSAP or simple linear interpolation to move camera to pos
+    camera.position.set(positions[axis].x, positions[axis].y, positions[axis].z);
+    controls.update();
+}
