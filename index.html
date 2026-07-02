@@ -1,78 +1,191 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Blender Model Previewer</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Model Previewer</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+    <script type="module" crossorigin src="./assets/index-BimWq8d0.js"></script>
 </head>
-
 <body>
-  <div class="container">
-    <header class="header">
-      <div class="title-container">
-        <h2 class="title-top">3D CORE v1.0 <span class="online-indicator"></span> ONLINE</h2>
-        <h1 class="title-main">BLENDER MODEL</h1>
-        <h1 class="title-previewer">PREVIEWER</h1>
-        <p class="subtitle">FAST • LIGHTWEIGHT • POWERFUL</p>
-      </div>
-    </header>
+    
+    <div id="ui-container">
+        <div class="sidebar-header">
+            <h2>3D CORE v1.0</h2>
+            <div class="status-indicator">
+                <span class="pulse-dot"></span>
+                <span class="status-text">ONLINE</span>
+            </div>
+        </div>
 
-    <aside class="sidebar">
-      <div class="sidebar-content">
+        <div class="neon-divider"></div>
+
         <div class="control-group">
-          <label>GEOMETRY INPUT</label>
-          <button id="load-button" class="control-button">LOAD .GLTF / .GLB</button>
-        </div>
-        <div class="control-group">
-          <label>RENDERING ENGINE</label>
-          <div class="button-group">
-            <button id="shaded-btn" class="control-button active">SHADED</button>
-            <button id="wireframe-btn" class="control-button">WIREFRAME</button>
-          </div>
-        </div>
-        <div class="control-group">
-          <label>LIGHTING INTENSITY</label>
-          <div class="slider-container">
-            <input type="range" min="0" max="3" value="1" step="0.1" class="slider" id="light-slider">
-            <span id="light-value">1.0x</span>
-          </div>
-        </div>
-        <div class="control-group">
-          <label>ORBITAL MATRIX</label>
-          <div class="switch-container">
-            <label class="switch">
-              <input type="checkbox" id="auto-rotate-switch" checked>
-              <span class="switch-slider"></span>
+            <span class="group-label">GEOMETRY INPUT</span>
+            <label for="file-input" class="cyber-button">
+                <span class="btn-glitch-text">LOAD .GLTF / .GLB</span>
             </label>
-            <span>AUTO-ROTATION</span>
-          </div>
+            <input type="file" id="file-input" accept=".gltf,.glb">
         </div>
-        <div class="control-group diagnostics">
-          <label>SYSTEM DIAGNOSTICS</label>
-          <p>SYS: <span id="sys-status">READY</span></p>
-          <p>FILE: <span id="file-name">Monkey.glb</span></p>
-          <p>POLYS: <span id="poly-count">968</span></p>
-          <p>VERTS: <span id="vert-count">1,966</span></p>
+
+        <div class="control-group">
+            <span class="group-label">RENDERING ENGINE</span>
+            <div class="control-row">
+                <button class="cyber-btn-sm active" id="btn-shaded">SHADED</button>
+                <button class="cyber-btn-sm" id="btn-wireframe">WIREFRAME</button>
+            </div>
         </div>
-      </div>
-      <div class="secure-connection">
-        <p>SECURE CONNECTION // 0x77A</p>
-      </div>
-    </aside>
 
-    <main id="main-content" class="main-content"></main>
+        <div class="control-group">
+            <span class="group-label">LIGHTING INTENSITY</span>
+            <div class="range-container">
+                <input type="range" id="light-intensity" min="0" max="3" step="0.1" value="1">
+                <span id="light-val" class="matrix-readout">1.0x</span>
+            </div>
+        </div>
 
-    <footer class="footer">
-      <div class="feature"><div class="icon-placeholder"></div><h3>MODEL PREVIEW</h3><p>Instant 3D model visualization</p></div>
-      <div class="feature"><div class="icon-placeholder"></div><h3>REALTIME RENDERING</h3><p>Optimized performance with modern engine</p></div>
-      <div class="feature"><div class="icon-placeholder"></div><h3>AUTO ROTATION</h3><p>Interactive model exploration</p></div>
-      <div class="feature"><div class="icon-placeholder"></div><h3>SECURE & RELIABLE</h3><p>Safe connection & trusted platform</p></div>
-    </footer>
-  </div>
+        <div class="control-group">
+            <span class="group-label">ORBITAL MATRIX</span>
+            <label class="cyber-switch">
+                <input type="checkbox" id="auto-rotate" checked>
+                <span class="slider"></span>
+                <span class="switch-text">AUTO-ROTATION</span>
+            </label>
+        </div>
 
-  <script type="module" src="/index.js"></script>
+        <div class="control-group">
+            <span class="group-label">SYSTEM DIAGNOSTICS</span>
+            <div id="model-info">
+                <div class="info-row"><span class="lbl">SYS:</span> <span class="val" id="meta-status">AWAITING_DATA...</span></div>
+                <div class="info-row"><span class="lbl">FILE:</span> <span class="val" id="meta-name">---</span></div>
+                <div class="info-row"><span class="lbl">POLYS:</span> <span class="val" id="meta-polys">0</span></div>
+                <div class="info-row"><span class="lbl">VERTS:</span> <span class="val" id="meta-verts">0</span></div>
+            </div>
+        </div>
+        <div class="control-group">
+            <span class="group-label">TOOLS</span>
+            <label class="cyber-switch">
+                <input type="checkbox" id="toggle-grid">
+                <span class="slider"></span>
+                <span class="switch-text">XYZ GRID</span>
+            </label>
+            <label class="cyber-switch">
+                <input type="checkbox" id="toggle-measure">
+                <span class="slider"></span>
+                <span class="switch-text">MEASURE MODE</span>
+            </label>
+        </div>
+        <div class="control-group">
+            <span class="group-label">ADVANCED UTILITIES</span>
+            <div class="grid-controls">
+                <button class="cyber-btn-sm" onclick="toggleBoundingBox()">BOUNDS</button>
+                <button class="cyber-btn-sm" onclick="setCameraView('top')">TOP</button>
+                <button class="cyber-btn-sm" onclick="setCameraView('front')">FRONT</button>
+            </div>
+            <div class="range-container" style="margin-top: 10px;">
+                <span class="sub-label">CLIP PLANE X</span>
+                <input type="range" id="clip-plane" min="-5" max="5" step="0.1" value="0">
+            </div>
+        </div>
+        
+        <div class="sidebar-footer">
+            <div class="corner-bracket"></div>
+            <span>SECURE CONNECTION // 0x77A</span>
+        </div>
+    </div>
+
+    <div id="loading">
+        <div class="spinner"></div>
+        <div class="loading-text">INITIALIZING MATRIX...</div>
+    </div>
+    
+    <div id="canvas-container">
+        <div class="screen-bracket bracket-tl"></div>
+        <div class="screen-bracket bracket-tr"></div>
+        <div class="screen-bracket bracket-bl"></div>
+        <div class="screen-bracket bracket-br"></div>
+    </div>
+
 </body>
 
+<script type="module">
+    // Inside your init function
+    const gridHelper = new THREE.GridHelper(10, 10, 0x00ff00, 0x222222);
+    gridHelper.visible = false; // Hidden by default
+    scene.add(gridHelper);
+
+    // Event Listener for the UI switch
+    document.getElementById('toggle-grid').addEventListener('change', (e) => {
+        gridHelper.visible = e.target.checked;
+    });
+
+    let measureMode = false;
+    let points = [];
+
+    // Event Listener for UI switch
+    document.getElementById('toggle-measure').addEventListener('change', (e) => {
+        measureMode = e.target.checked;
+        points = []; // Reset on toggle
+    });
+
+    // Click handler (Add this to your existing canvas click listener)
+    window.addEventListener('click', (event) => {
+        if (!measureMode) return;
+
+        const raycaster = new THREE.Raycaster();
+        // Normalize mouse coordinates...
+        // raycaster.setFromCamera(mouse, camera);
+        
+        const intersects = raycaster.intersectObject(yourModel, true);
+        
+        if (intersects.length > 0) {
+            points.push(intersects[0].point);
+            
+            if (points.length === 2) {
+                const distance = points[0].distanceTo(points[1]);
+                console.log(`Distance: ${distance.toFixed(2)} units`);
+                // Add a LineBasicMaterial/BufferGeometry to draw the line between points[0] and points[1]
+                points = []; // Reset after measurement
+            }
+        }
+    });
+
+    // Add to your renderer
+    renderer.localClippingEnabled = true;
+
+    // Create a plane
+    const plane = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0);
+    // Apply to model material
+    model.traverse(child => {
+        if (child.isMesh) {
+            child.material.clippingPlanes = [plane];
+            child.material.clipShadows = true;
+        }
+    });
+
+    const box = new THREE.BoxHelper(model, 0xffff00);
+    scene.add(box);
+
+    // Update this in your animation loop to track model movement
+    box.setFromObject(model);
+
+    function setCameraView(axis) {
+        const positions = {
+            'front': { x: 0, y: 0, z: 5 },
+            'top': { x: 0, y: 5, z: 0 },
+            'iso': { x: 5, y: 5, z: 5 }
+        };
+        // Use GSAP or simple linear interpolation to move camera to pos
+        camera.position.set(positions[axis].x, positions[axis].y, positions[axis].z);
+        controls.update();
+    }
+</script>
 </html>
