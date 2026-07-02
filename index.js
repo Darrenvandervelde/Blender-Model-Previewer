@@ -118,7 +118,7 @@ const gridHelper = new THREE.GridHelper(
     0x333333
 );
 
-gridHelper.visible = false;
+gridHelper.visible = true;
 
 scene.add(gridHelper);
 
