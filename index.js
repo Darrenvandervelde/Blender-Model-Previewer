@@ -827,11 +827,12 @@ function createDistanceSprite(start, end, distance) {
 
     const sprite = new THREE.Sprite(material);
 
-    sprite.scale.set(
-        1,
-        0.25,
-        1
-    );
+    // Initial scale is no longer needed as it's dynamically set in the animate loop
+    // sprite.scale.set(
+    //     1,
+    //     0.25,
+    //     1
+    // );
 
     sprite.position.copy(
         start.clone().lerp(end, 0.5)
