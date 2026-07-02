@@ -47,37 +47,48 @@ let originalMaterials = new Map();
 // GLTF Model Loader
 const loader = new GLTFLoader();
 
-loader.load(
-  // resource URL
-  './assets/Monkey.glb', // Using the monkey model from the poster
-  // called when the resource is loaded
-  (gltf) => {
-    currentModel = gltf.scene;
-    scene.add(currentModel);
+const fileInput = document.getElementById('file-input');
 
-    // Optional: center the model
-    const box = new THREE.Box3().setFromObject(currentModel);
-    const center = box.getCenter(new THREE.Vector3());
-    currentModel.position.sub(center); // center the model
+fileInput.addEventListener('change', (event) => {
+  const file = event.target.files[0];
 
-    // Store original materials
-    currentModel.traverse((node) => {
-      if (node.isMesh && node.material) {
-        originalMaterials.set(node, node.material);
+  if (file) {
+    const url = URL.createObjectURL(file);
+
+    // Clear previous model
+    if (currentModel) {
+      scene.remove(currentModel);
+    }
+
+    loader.load(
+      url,
+      (gltf) => {
+        currentModel = gltf.scene;
+        scene.add(currentModel);
+
+        const box = new THREE.Box3().setFromObject(currentModel);
+        const center = box.getCenter(new THREE.Vector3());
+        currentModel.position.sub(center);
+
+        originalMaterials.clear();
+        currentModel.traverse((node) => {
+          if (node.isMesh && node.material) {
+            originalMaterials.set(node, node.material);
+          }
+        });
+
+        console.log('Model loaded successfully');
+        URL.revokeObjectURL(url); // Clean up object URL
+      },
+      (xhr) => {
+        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+      },
+      (error) => {
+        console.error('An error happened while loading the model.', error);
       }
-    });
-
-    console.log('Model loaded successfully');
-  },
-  // called while loading is progressing
-  (xhr) => {
-    console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-  },
-  // called when loading has errors
-  (error) => {
-    console.error('An error happened while loading the model. Make sure you have "Monkey.glb" in the "assets" folder.', error);
+    );
   }
-);
+});
 
 // Animation loop
 function animate() {
