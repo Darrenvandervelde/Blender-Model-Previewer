@@ -49,6 +49,7 @@ const loader = new GLTFLoader();
 
 const fileInput = document.getElementById('file-input');
 
+let box = null;
 fileInput.addEventListener('change', (event) => {
   const file = event.target.files[0];
 
@@ -59,6 +60,9 @@ fileInput.addEventListener('change', (event) => {
     if (currentModel) {
       scene.remove(currentModel);
     }
+    if (box) {
+      scene.remove(box);
+    }
 
     loader.load(
       url,
@@ -66,8 +70,8 @@ fileInput.addEventListener('change', (event) => {
         currentModel = gltf.scene;
         scene.add(currentModel);
 
-        const box = new THREE.Box3().setFromObject(currentModel);
-        const center = box.getCenter(new THREE.Vector3());
+        const boundingBox = new THREE.Box3().setFromObject(currentModel);
+        const center = boundingBox.getCenter(new THREE.Vector3());
         currentModel.position.sub(center);
 
         originalMaterials.clear();
@@ -76,6 +80,19 @@ fileInput.addEventListener('change', (event) => {
             originalMaterials.set(node, node.material);
           }
         });
+
+        // Add clipping plane
+        const plane = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0);
+        currentModel.traverse(child => {
+            if (child.isMesh) {
+                child.material.clippingPlanes = [plane];
+                child.material.clipShadows = true;
+            }
+        });
+
+        // Create and add the box helper
+        box = new THREE.BoxHelper(currentModel, 0xffff00);
+        scene.add(box);
 
         console.log('Model loaded successfully');
         URL.revokeObjectURL(url); // Clean up object URL
@@ -98,6 +115,10 @@ function animate() {
 
   if (currentModel && autoRotateSwitch.checked) {
     currentModel.rotation.y += 0.005;
+  }
+
+  if (box) {
+    box.update();
   }
 
   renderer.render(scene, camera);
