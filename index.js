@@ -21,6 +21,11 @@ const wireframeBtn = document.getElementById("btn-wireframe");
 const gridToggle = document.getElementById("toggle-grid");
 const measureToggle = document.getElementById("toggle-measure");
 
+const metaStatus = document.getElementById("meta-status");
+const metaName = document.getElementById("meta-name");
+const metaPolys = document.getElementById("meta-polys");
+const metaVerts = document.getElementById("meta-verts");
+
 // ============================================
 // Scene
 // ============================================
@@ -295,6 +300,39 @@ function normalizeModelScale(model) {
 }
 
 // ============================================
+// SYSTEM DIAGNOSTICS PANEL
+// ============================================
+
+/**
+ * Updates the System Diagnostics panel with information about the loaded model.
+ * @param {string} fileName - The name of the loaded file.
+ * @param {object} model - The Three.js model object.
+ */
+function updateModelInfo(fileName, model) {
+    let polyCount = 0;
+    let vertCount = 0;
+
+    model.traverse((child) => {
+        if (child.isMesh) {
+            const geometry = child.geometry;
+            if (geometry) {
+                if (geometry.index) {
+                    polyCount += geometry.index.count / 3;
+                } else {
+                    polyCount += geometry.attributes.position.count / 3;
+                }
+                vertCount += geometry.attributes.position.count;
+            }
+        }
+    });
+
+    metaStatus.textContent = "LOADED";
+    metaName.textContent = fileName;
+    metaPolys.textContent = polyCount.toLocaleString();
+    metaVerts.textContent = vertCount.toLocaleString();
+}
+
+// ============================================
 // Load Model
 // ============================================
 
@@ -311,6 +349,10 @@ fileInput.addEventListener("change", (event) => {
     console.clear();
 
     console.log("Loading:", file.name);
+    metaStatus.textContent = "LOADING...";
+    metaName.textContent = file.name;
+    metaPolys.textContent = "---";
+    metaVerts.textContent = "---";
 
     loader.load(
 
@@ -358,6 +400,8 @@ fileInput.addEventListener("change", (event) => {
             );
 
             scene.add(currentBoxHelper);
+
+            updateModelInfo(file.name, currentModel);
 
             const box = new THREE.Box3().setFromObject(currentModel);
 
