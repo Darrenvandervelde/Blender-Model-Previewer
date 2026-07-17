@@ -9,7 +9,9 @@
     "dev": "vite",
     "start": "electron .",
     "build": "vite build",
-    "vercel-build": "vite build"
+    "preview": "vite preview",
+    "vercel-build": "vite build",
+    "electron-build": "vite build && electron-builder"
   },
   "dependencies": {
     "three": "^0.184.0"
@@ -36,7 +38,7 @@
     },
     "win": {
       "icon": "assets/Logo.ico",
-      "target": ["nsis"], 
+      "target": ["nsis"],
       "signAndEditExecutable": true
     },
     "nsis": {
