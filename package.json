@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "vite",
     "start": "electron .",
-    "build": "vite build && electron-builder --win --dir",
+    "build": "vite build",
     "vercel-build": "vite build"
   },
   "dependencies": {
