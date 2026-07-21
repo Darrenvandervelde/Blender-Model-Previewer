@@ -1,14 +1,12 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  base: './', // Keep relative paths active
+  base: './',
   build: {
-    // Highlight-start
-    outDir: 'dist', // Changes output from 'dist' to 'release/dist'
-    emptyOutDir: true       // Safely clears release/dist before building
-    // Highlight-end
+    outDir: 'dist',
+    emptyOutDir: true,
   },
-  plugins: [
-    // your plugins...
+  plugins: process.env.VITE_BUILD_WEB ? [] : [
+    // Electron plugins for desktop builds
   ]
 });
