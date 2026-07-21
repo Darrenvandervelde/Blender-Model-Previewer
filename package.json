@@ -22,6 +22,9 @@
     "vite": "^5.0.0",
     "vite-plugin-electron": "^0.28.0"
   },
+  "engines": {
+    "node": "18.x"
+  },
   "build": {
     "appId": "com.example.blender-model-previewer",
     "productName": "3D Model Previewer",
