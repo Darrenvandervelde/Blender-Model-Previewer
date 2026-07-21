@@ -2,13 +2,13 @@
   <h1>Blender Model Previewer</h1>
 </div>
 
+![Posters](assets/Poster.png)
+
 ## Overview 
 
 The Blender Model Previewer is a high-performance, lightweight desktop application built on the Electron framework designed for rapid, localized 3D asset inspection. By leveraging a Three.js-powered render engine, it provides seamless 3D model viewing directly on your system.
 
 ---
-
-![Posters](assets/Poster.png)
 
 ## Repository Structure & Roles
 
